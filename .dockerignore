@@ -1,0 +1,15 @@
+# dependencies
+server/node_modules
+server/bun.lockb
+
+# git
+.git
+.gitignore
+
+# editor
+.vscode
+.github
+
+# misc
+*.md
+*.log

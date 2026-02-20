@@ -1,0 +1,2183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jukebox</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <style>
+      /* ── CSS Variables ──────────────────────────────────────────────── */
+      :root {
+        --bg: #0d0d0d;
+        --surface: #161616;
+        --surface-2: #1e1e1e;
+        --surface-3: #262626;
+        --border: #2a2a2a;
+        --text: #e8e4e0;
+        --text-dim: #8a8580;
+        --accent: #ff5722;
+        --accent-hover: #ff7043;
+        --accent-dim: #ff57221a;
+        --green: #4caf50;
+        --radius: 10px;
+        --font: "DM Sans", sans-serif;
+        --mono: "Space Mono", monospace;
+      }
+
+      /* ── Reset & Base ───────────────────────────────────────────────── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font);
+        font-size: 15px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button {
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      /* ── Scrollbars ─────────────────────────────────────────────────── */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--surface-3);
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--border);
+      }
+
+      /* ── Animations ─────────────────────────────────────────────────── */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes eq1 {
+        0%,
+        100% {
+          height: 6px;
+        }
+        50% {
+          height: 18px;
+        }
+      }
+      @keyframes eq2 {
+        0%,
+        100% {
+          height: 12px;
+        }
+        50% {
+          height: 4px;
+        }
+      }
+      @keyframes eq3 {
+        0%,
+        100% {
+          height: 8px;
+        }
+        50% {
+          height: 20px;
+        }
+      }
+      @keyframes toastIn {
+        from {
+          opacity: 0;
+          transform: translateX(-50%) translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
+      }
+      @keyframes toastOut {
+        from {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateX(-50%) translateY(16px);
+        }
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ── Typography helpers ─────────────────────────────────────────── */
+      .mono {
+        font-family: var(--mono);
+      }
+      .dim {
+        color: var(--text-dim);
+      }
+
+      /* ── Buttons ────────────────────────────────────────────────────── */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border: none;
+        border-radius: var(--radius);
+        font-size: 14px;
+        font-weight: 600;
+        transition:
+          background 0.15s,
+          opacity 0.15s;
+        white-space: nowrap;
+      }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+      .btn-primary:hover:not(:disabled) {
+        background: var(--accent-hover);
+      }
+      .btn-ghost {
+        background: var(--surface-2);
+        color: var(--text);
+      }
+      .btn-ghost:hover:not(:disabled) {
+        background: var(--surface-3);
+      }
+      .btn-icon {
+        padding: 8px;
+        background: var(--surface-2);
+        border-radius: var(--radius);
+        color: var(--text);
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .btn-icon:hover {
+        background: var(--surface-3);
+      }
+      .btn-sm {
+        padding: 5px 10px;
+        font-size: 13px;
+      }
+
+      /* ── Form inputs ────────────────────────────────────────────────── */
+      .input {
+        width: 100%;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text);
+        font-family: var(--font);
+        font-size: 14px;
+        padding: 10px 14px;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      .input:focus {
+        border-color: var(--accent);
+      }
+      .input::placeholder {
+        color: var(--text-dim);
+      }
+
+      /* ── Hidden YouTube players ─────────────────────────────────────── */
+      #yt-player-a,
+      #yt-player-b {
+        position: fixed;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+        top: -100px;
+        left: -100px;
+      }
+
+      /* ── Toast ──────────────────────────────────────────────────────── */
+      #toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(0);
+        background: var(--surface-3);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 10px 18px;
+        font-size: 13px;
+        z-index: 9999;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      #toast.show {
+        animation: toastIn 0.2s ease forwards;
+      }
+      #toast.hide {
+        animation: toastOut 0.2s ease forwards;
+      }
+      #toast.hidden {
+        display: none;
+      }
+
+      /* ── Modal ──────────────────────────────────────────────────────── */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      .modal-overlay.hidden {
+        display: none;
+      }
+      .modal {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        width: 100%;
+        max-width: 440px;
+        animation: fadeIn 0.2s ease;
+      }
+      .modal-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 16px;
+      }
+      .modal-close {
+        float: right;
+        background: none;
+        border: none;
+        color: var(--text-dim);
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+        margin-top: -4px;
+      }
+      .modal-close:hover {
+        color: var(--text);
+      }
+
+      /* ── HOME SCREEN ────────────────────────────────────────────────── */
+      #screen-home {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        animation: fadeIn 0.3s ease;
+      }
+      #screen-home.hidden {
+        display: none;
+      }
+
+      .home-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: calc(var(--radius) * 1.5);
+        padding: 36px 32px;
+        width: 100%;
+        max-width: 420px;
+      }
+      .home-logo {
+        text-align: center;
+        margin-bottom: 28px;
+      }
+      .home-logo-title {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+      }
+      .home-logo-title span {
+        color: var(--accent);
+      }
+      .home-logo-sub {
+        font-size: 13px;
+        color: var(--text-dim);
+        margin-top: 4px;
+      }
+      .home-section {
+        margin-bottom: 20px;
+      }
+      .home-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+        margin-bottom: 8px;
+      }
+      .home-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--text-dim);
+        font-size: 12px;
+        margin: 24px 0;
+      }
+      .home-divider::before,
+      .home-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+      .home-error {
+        color: #ff5252;
+        font-size: 13px;
+        margin-top: 8px;
+      }
+
+      /* ── ROOM SCREEN ────────────────────────────────────────────────── */
+      #screen-room {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
+      #screen-room.hidden {
+        display: none;
+      }
+
+      /* Header */
+      .room-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 16px;
+        height: 56px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+        flex-shrink: 0;
+      }
+      .room-header-title {
+        font-size: 15px;
+        font-weight: 700;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .room-header-meta {
+        font-size: 13px;
+        color: var(--text-dim);
+        white-space: nowrap;
+      }
+
+      /* Equalizer bars */
+      .eq-bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+      .eq-bar {
+        width: 3px;
+        background: var(--accent);
+        border-radius: 2px;
+      }
+      .eq-bar:nth-child(1) {
+        animation: eq1 0.8s ease-in-out infinite;
+        animation-play-state: paused;
+      }
+      .eq-bar:nth-child(2) {
+        animation: eq2 0.6s ease-in-out infinite 0.15s;
+        animation-play-state: paused;
+      }
+      .eq-bar:nth-child(3) {
+        animation: eq3 0.9s ease-in-out infinite 0.05s;
+        animation-play-state: paused;
+      }
+      .eq-bars.playing .eq-bar {
+        animation-play-state: running;
+      }
+      .eq-bar:nth-child(1) {
+        height: 6px;
+      }
+      .eq-bar:nth-child(2) {
+        height: 12px;
+      }
+      .eq-bar:nth-child(3) {
+        height: 8px;
+      }
+
+      /* Room body */
+      .room-body {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      /* Main area */
+      .room-main {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      /* ── Now Playing ────────────────────────────────────────────────── */
+      .now-playing {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+        animation: fadeIn 0.3s ease;
+      }
+      .now-playing-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--accent);
+        margin-bottom: 14px;
+      }
+      .now-playing-content {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+      }
+      .now-playing-thumb {
+        width: 80px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 6px;
+        flex-shrink: 0;
+        background: var(--surface-2);
+      }
+      .now-playing-thumb-placeholder {
+        width: 80px;
+        height: 60px;
+        border-radius: 6px;
+        flex-shrink: 0;
+        background: var(--surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-dim);
+        font-size: 24px;
+      }
+      .now-playing-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .now-playing-title {
+        font-size: 15px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 4px;
+      }
+      .now-playing-by {
+        font-size: 12px;
+        color: var(--text-dim);
+      }
+
+      /* Controls */
+      .player-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 14px;
+        flex-wrap: wrap;
+      }
+      .play-pause-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--accent);
+        border: none;
+        color: #fff;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .play-pause-btn:hover {
+        background: var(--accent-hover);
+      }
+      .skip-btn {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text);
+        font-size: 13px;
+        padding: 7px 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .skip-btn:hover {
+        background: var(--surface-3);
+      }
+      .skip-votes-badge {
+        background: var(--accent-dim);
+        color: var(--accent);
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-size: 11px;
+        font-weight: 700;
+        font-family: var(--mono);
+      }
+
+      /* Progress bar */
+      .progress-area {
+        margin-top: 14px;
+      }
+      .progress-bar-container {
+        width: 100%;
+        height: 4px;
+        background: var(--surface-2);
+        border-radius: 2px;
+        cursor: pointer;
+        position: relative;
+      }
+      .progress-bar-fill {
+        height: 100%;
+        background: var(--accent);
+        border-radius: 2px;
+        pointer-events: none;
+        transition: width 0.1s linear;
+        width: 0%;
+      }
+      .progress-times {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--text-dim);
+        font-family: var(--mono);
+        margin-top: 5px;
+      }
+
+      /* Crossfade slider */
+      .crossfade-area {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
+      }
+      .crossfade-label {
+        font-size: 12px;
+        color: var(--text-dim);
+        white-space: nowrap;
+      }
+      .crossfade-value {
+        font-size: 12px;
+        color: var(--accent);
+        font-family: var(--mono);
+        white-space: nowrap;
+        min-width: 32px;
+        text-align: right;
+      }
+      input[type="range"] {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 4px;
+        background: var(--surface-2);
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 14px;
+        height: 14px;
+        background: var(--accent);
+        border-radius: 50%;
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        background: var(--accent);
+        border-radius: 50%;
+        border: none;
+      }
+
+      /* Empty state */
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        background: var(--surface);
+        border: 1px dashed var(--border);
+        border-radius: var(--radius);
+        color: var(--text-dim);
+      }
+      .empty-state-icon {
+        font-size: 32px;
+        margin-bottom: 10px;
+      }
+      .empty-state-text {
+        font-size: 14px;
+      }
+
+      /* ── Add Track ──────────────────────────────────────────────────── */
+      .add-track {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px;
+      }
+      .add-track-label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+        margin-bottom: 10px;
+      }
+      .add-track-form {
+        display: flex;
+        gap: 8px;
+      }
+
+      /* ── Queue ──────────────────────────────────────────────────────── */
+      .queue-section {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .queue-header {
+        padding: 14px 16px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+        border-bottom: 1px solid var(--border);
+      }
+      .queue-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        transition: background 0.1s;
+        position: relative;
+      }
+      .queue-item:last-child {
+        border-bottom: none;
+      }
+      .queue-item:hover {
+        background: var(--surface-2);
+      }
+      .queue-item.is-current {
+        background: var(--accent-dim);
+      }
+      .queue-index {
+        font-size: 12px;
+        color: var(--text-dim);
+        font-family: var(--mono);
+        min-width: 20px;
+        text-align: right;
+      }
+      .queue-thumb {
+        width: 48px;
+        height: 36px;
+        object-fit: cover;
+        border-radius: 4px;
+        background: var(--surface-2);
+        flex-shrink: 0;
+      }
+      .queue-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .queue-title {
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .queue-by {
+        font-size: 11px;
+        color: var(--text-dim);
+        margin-top: 2px;
+      }
+      .queue-remove {
+        opacity: 0;
+        background: none;
+        border: none;
+        color: var(--text-dim);
+        padding: 4px 6px;
+        border-radius: 4px;
+        font-size: 14px;
+        transition:
+          opacity 0.1s,
+          color 0.1s;
+      }
+      .queue-item:hover .queue-remove {
+        opacity: 1;
+      }
+      .queue-remove:hover {
+        color: #ff5252;
+      }
+      .now-playing-indicator {
+        color: var(--accent);
+        font-size: 12px;
+      }
+
+      /* ── Sidebar ────────────────────────────────────────────────────── */
+      .room-sidebar {
+        width: 320px;
+        flex-shrink: 0;
+        border-left: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+      }
+      .sidebar-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border);
+      }
+      .sidebar-tab {
+        flex: 1;
+        padding: 12px;
+        background: none;
+        border: none;
+        color: var(--text-dim);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        transition:
+          color 0.15s,
+          background 0.15s;
+        border-bottom: 2px solid transparent;
+      }
+      .sidebar-tab:hover {
+        color: var(--text);
+        background: var(--surface-2);
+      }
+      .sidebar-tab.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+      }
+
+      /* Chat */
+      .chat-panel,
+      .people-panel {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        overflow: hidden;
+      }
+      .chat-panel.hidden,
+      .people-panel.hidden {
+        display: none;
+      }
+
+      .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .chat-msg {
+        animation: slideUp 0.18s ease;
+      }
+      .chat-msg-header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 2px;
+      }
+      .chat-msg-name {
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .chat-msg-time {
+        font-size: 11px;
+        color: var(--text-dim);
+      }
+      .chat-msg-text {
+        font-size: 13px;
+        word-break: break-word;
+      }
+      .chat-msg.system .chat-msg-text {
+        color: var(--text-dim);
+        font-style: italic;
+        font-size: 12px;
+      }
+
+      .chat-input-area {
+        padding: 12px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 8px;
+      }
+
+      /* People */
+      .people-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .person-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px;
+        border-radius: 6px;
+      }
+      .person-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: #000;
+        flex-shrink: 0;
+      }
+      .person-name {
+        font-size: 14px;
+        flex: 1;
+      }
+      .host-badge {
+        background: var(--accent-dim);
+        color: var(--accent);
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      /* ── Mobile ─────────────────────────────────────────────────────── */
+      @media (max-width: 768px) {
+        .room-sidebar {
+          position: fixed;
+          inset: 0;
+          width: 100%;
+          z-index: 100;
+          border-left: none;
+          transform: translateX(100%);
+          transition: transform 0.25s ease;
+        }
+        .room-sidebar.open {
+          transform: translateX(0);
+        }
+        .sidebar-toggle-btn {
+          display: flex !important;
+        }
+      }
+      .sidebar-toggle-btn {
+        display: none;
+      }
+      .sidebar-close-btn {
+        display: none;
+      }
+      @media (max-width: 768px) {
+        .sidebar-close-btn {
+          display: flex !important;
+          position: absolute;
+          top: 10px;
+          right: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Hidden YouTube player containers -->
+    <div id="yt-player-a"></div>
+    <div id="yt-player-b"></div>
+
+    <!-- Toast notification -->
+    <div id="toast" class="hidden"></div>
+
+    <!-- ─── HOME SCREEN ──────────────────────────────────────────────────── -->
+    <div id="screen-home">
+      <div class="home-card">
+        <div class="home-logo">
+          <div class="home-logo-title">Juke<span>box</span></div>
+          <div class="home-logo-sub">
+            collaborative music • no accounts • no nonsense
+          </div>
+        </div>
+
+        <div class="home-section">
+          <label class="home-label" for="input-username">Your Name</label>
+          <input
+            class="input"
+            id="input-username"
+            type="text"
+            placeholder="Enter your name"
+            maxlength="24"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="home-section">
+          <label class="home-label" for="input-roomname"
+            >Room Name <span class="dim">(optional)</span></label
+          >
+          <input
+            class="input"
+            id="input-roomname"
+            type="text"
+            placeholder="My Room"
+            maxlength="64"
+            autocomplete="off"
+          />
+        </div>
+
+        <button class="btn btn-primary" style="width: 100%" id="btn-create">
+          Create Room
+        </button>
+        <div id="create-error" class="home-error"></div>
+
+        <div class="home-divider">or join existing</div>
+
+        <div class="home-section">
+          <label class="home-label" for="input-invite"
+            >Invite Link or Room ID</label
+          >
+          <input
+            class="input"
+            id="input-invite"
+            type="text"
+            placeholder="Paste link or room ID"
+            autocomplete="off"
+          />
+        </div>
+
+        <button class="btn btn-ghost" style="width: 100%" id="btn-join">
+          Join Room
+        </button>
+        <div id="join-error" class="home-error"></div>
+      </div>
+    </div>
+
+    <!-- ─── ROOM SCREEN ──────────────────────────────────────────────────── -->
+    <div id="screen-room" class="hidden">
+      <!-- Header -->
+      <header class="room-header">
+        <div class="eq-bars" id="eq-bars">
+          <div class="eq-bar"></div>
+          <div class="eq-bar"></div>
+          <div class="eq-bar"></div>
+        </div>
+        <div class="room-header-title" id="room-header-title">Room</div>
+        <div class="room-header-meta" id="room-header-meta"></div>
+        <button
+          class="btn-icon"
+          id="btn-invite-modal"
+          title="Invite people"
+          style="font-size: 16px"
+        >
+          🔗
+        </button>
+        <button
+          class="btn-icon sidebar-toggle-btn"
+          id="btn-sidebar-toggle"
+          title="Toggle sidebar"
+          style="font-size: 16px"
+        >
+          💬
+        </button>
+      </header>
+
+      <!-- Body -->
+      <div class="room-body">
+        <!-- Main area -->
+        <main class="room-main" id="room-main">
+          <!-- Now Playing / Empty state -->
+          <div id="now-playing-area"></div>
+
+          <!-- Add Track -->
+          <div class="add-track">
+            <div class="add-track-label">Add Track</div>
+            <div class="add-track-form">
+              <input
+                class="input"
+                id="input-track-url"
+                type="text"
+                placeholder="YouTube URL or video ID"
+                style="flex: 1"
+                autocomplete="off"
+              />
+              <button class="btn btn-primary" id="btn-add-track">Add</button>
+            </div>
+          </div>
+
+          <!-- Queue -->
+          <div class="queue-section" id="queue-section">
+            <div class="queue-header">Up Next</div>
+            <div id="queue-list"></div>
+          </div>
+        </main>
+
+        <!-- Sidebar -->
+        <aside class="room-sidebar" id="room-sidebar">
+          <button
+            class="btn-icon sidebar-close-btn"
+            id="btn-sidebar-close"
+            style="font-size: 18px"
+          >
+            ✕
+          </button>
+
+          <div class="sidebar-tabs">
+            <button class="sidebar-tab active" id="tab-chat" data-tab="chat">
+              Chat
+            </button>
+            <button class="sidebar-tab" id="tab-people" data-tab="people">
+              People
+            </button>
+          </div>
+
+          <!-- Chat panel -->
+          <div class="chat-panel" id="panel-chat">
+            <div class="chat-messages" id="chat-messages"></div>
+            <div class="chat-input-area">
+              <input
+                class="input"
+                id="input-chat"
+                type="text"
+                placeholder="Send a message…"
+                maxlength="500"
+                style="flex: 1"
+                autocomplete="off"
+              />
+              <button class="btn btn-primary btn-sm" id="btn-chat-send">
+                Send
+              </button>
+            </div>
+          </div>
+
+          <!-- People panel -->
+          <div class="people-panel hidden" id="panel-people">
+            <div class="people-list" id="people-list"></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ─── INVITE MODAL ─────────────────────────────────────────────────── -->
+    <div id="modal-invite" class="modal-overlay hidden">
+      <div class="modal">
+        <button class="modal-close" id="modal-invite-close">✕</button>
+        <div class="modal-title">Invite People</div>
+        <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 14px">
+          Share this link to invite others to the room.
+        </p>
+        <div style="display: flex; gap: 8px">
+          <input
+            class="input mono"
+            id="invite-url-display"
+            type="text"
+            readonly
+            style="font-size: 13px"
+          />
+          <button class="btn btn-primary btn-sm" id="btn-copy-invite">
+            Copy
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ═══════════════════════════════════════════════════════════════════════════
+      //  JUKEBOX CLIENT
+      // ═══════════════════════════════════════════════════════════════════════════
+
+      // ─── State ──────────────────────────────────────────────────────────────────
+      const state = {
+        userId: null,
+        roomId: null,
+        roomName: null,
+        roomState: null, // last SerializedRoom from server
+        wsReady: false,
+        crossfadeDuration: 3, // seconds (0–8)
+      };
+
+      // ─── WebSocket ──────────────────────────────────────────────────────────────
+      let ws = null;
+      let reconnectTimer = null;
+
+      function connectWS(roomId, userName) {
+        const proto = location.protocol === "https:" ? "wss" : "ws";
+        const url = `${proto}://${location.host}/ws`;
+
+        ws = new WebSocket(url);
+
+        ws.onopen = () => {
+          state.wsReady = true;
+          clearTimeout(reconnectTimer);
+          ws.send(JSON.stringify({ type: "join", roomId, userName }));
+        };
+
+        ws.onmessage = (e) => {
+          let msg;
+          try {
+            msg = JSON.parse(e.data);
+          } catch {
+            return;
+          }
+          handleServerMessage(msg);
+        };
+
+        ws.onclose = () => {
+          state.wsReady = false;
+          if (state.roomId) {
+            reconnectTimer = setTimeout(
+              () => connectWS(roomId, userName),
+              3000,
+            );
+          }
+        };
+
+        ws.onerror = () => {
+          ws.close();
+        };
+      }
+
+      function sendWS(payload) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(payload));
+        }
+      }
+
+      // ─── Server message handler ──────────────────────────────────────────────────
+      function handleServerMessage(msg) {
+        switch (msg.type) {
+          case "room:state":
+            state.userId = msg.userId;
+            state.roomState = msg.room;
+            state.crossfadeDuration = msg.room.crossfadeDuration;
+            applyRoomState(msg.room);
+            break;
+
+          case "queue:updated":
+            if (state.roomState) {
+              state.roomState.queue = msg.queue;
+              state.roomState.currentIndex = msg.currentIndex;
+            }
+            renderQueue(msg.queue, msg.currentIndex);
+            renderNowPlaying(msg.queue, msg.currentIndex);
+            break;
+
+          case "playback:sync":
+            handlePlaybackSync(msg);
+            break;
+
+          case "user:joined":
+            if (state.roomState) {
+              state.roomState.users = [
+                ...(state.roomState.users || []),
+                msg.user,
+              ];
+            }
+            renderPeopleList(state.roomState?.users || []);
+            updateUserCount();
+            addSystemMessage(`${msg.user.name} joined the room`);
+            break;
+
+          case "user:left":
+            if (state.roomState) {
+              state.roomState.users = (state.roomState.users || []).filter(
+                (u) => u.id !== msg.userId,
+              );
+            }
+            renderPeopleList(state.roomState?.users || []);
+            updateUserCount();
+            // System message: we don't have the name here, skip
+            break;
+
+          case "skip:votes":
+            updateSkipVotes(msg.current, msg.needed);
+            break;
+
+          case "chat:message":
+            addChatMessage(msg);
+            break;
+
+          case "crossfade:updated":
+            state.crossfadeDuration = msg.duration;
+            const slider = document.getElementById("crossfade-slider");
+            const valueEl = document.getElementById("crossfade-value");
+            if (slider) slider.value = msg.duration;
+            if (valueEl) valueEl.textContent = msg.duration + "s";
+            break;
+
+          case "room:error":
+            showToast(msg.message || "An error occurred");
+            showHomeError(msg.message);
+            break;
+        }
+      }
+
+      // ─── Apply full room state on join ───────────────────────────────────────────
+      function applyRoomState(room) {
+        state.roomId = room.id;
+        state.roomName = room.name;
+
+        showRoomScreen();
+
+        document.getElementById("room-header-title").textContent = room.name;
+        updateUserCount();
+
+        renderPeopleList(room.users || []);
+        renderQueue(room.queue, room.currentIndex);
+        renderNowPlaying(room.queue, room.currentIndex);
+
+        // Crossfade slider
+        const slider = document.getElementById("crossfade-slider");
+        const valueEl = document.getElementById("crossfade-value");
+        if (slider) {
+          slider.value = room.crossfadeDuration;
+        }
+        if (valueEl) {
+          valueEl.textContent = room.crossfadeDuration + "s";
+        }
+
+        // Set up playback — wait until YT API is ready
+        waitForYTReady(() => {
+          const track =
+            room.currentIndex >= 0 ? room.queue[room.currentIndex] : null;
+          if (track) {
+            const expectedElapsed =
+              room.playbackState === "playing" ? room.elapsed : room.elapsed;
+
+            loadTrackOnPlayer(
+              activePIdx,
+              track.youtubeId,
+              expectedElapsed,
+              room.playbackState === "playing",
+            );
+          }
+        });
+
+        // Update equalizer state
+        updateEqBars(room.playbackState === "playing");
+      }
+
+      function updateUserCount() {
+        const count = (state.roomState?.users || []).length;
+        document.getElementById("room-header-meta").textContent =
+          count === 1 ? "1 listener" : `${count} listeners`;
+      }
+
+      // ─── Now Playing renderer ────────────────────────────────────────────────────
+      let skipVoteState = { current: 0, needed: 1 };
+
+      function renderNowPlaying(queue, currentIndex) {
+        const el = document.getElementById("now-playing-area");
+        if (!el) return;
+
+        if (currentIndex < 0 || !queue || queue.length === 0) {
+          el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🎵</div>
+        <div class="empty-state-text">Add a track to get started</div>
+      </div>`;
+          updateEqBars(false);
+          return;
+        }
+
+        const track = queue[currentIndex];
+        if (!track) return;
+
+        const isPlaying = state.roomState?.playbackState === "playing";
+        const votes = skipVoteState;
+
+        el.innerHTML = `
+    <div class="now-playing">
+      <div class="now-playing-label">Now Playing</div>
+      <div class="now-playing-content">
+        <img class="now-playing-thumb" src="${escHtml(track.thumbnail)}"
+             alt="" onerror="this.style.display='none'" />
+        <div class="now-playing-info">
+          <div class="now-playing-title" title="${escHtml(track.title)}">${escHtml(track.title)}</div>
+          <div class="now-playing-by">Added by ${escHtml(track.addedByName)}</div>
+        </div>
+      </div>
+      <div class="player-controls">
+        <button class="play-pause-btn" id="btn-play-pause" title="${isPlaying ? "Pause" : "Play"}">
+          ${isPlaying ? "⏸" : "▶"}
+        </button>
+        <button class="skip-btn" id="btn-skip">
+          Skip <span class="skip-votes-badge" id="skip-badge">${votes.current}/${votes.needed}</span>
+        </button>
+      </div>
+      <div class="progress-area">
+        <div class="progress-bar-container" id="progress-bar-container">
+          <div class="progress-bar-fill" id="progress-bar-fill"></div>
+        </div>
+        <div class="progress-times">
+          <span id="progress-current">0:00</span>
+          <span id="progress-duration">0:00</span>
+        </div>
+      </div>
+      <div class="crossfade-area">
+        <span class="crossfade-label">Crossfade</span>
+        <input type="range" id="crossfade-slider" min="0" max="8" step="0.5"
+               value="${state.crossfadeDuration}" />
+        <span class="crossfade-value" id="crossfade-value">${state.crossfadeDuration}s</span>
+      </div>
+    </div>`;
+
+        // Bind controls
+        document.getElementById("btn-play-pause").onclick = () => {
+          if (state.roomState?.playbackState === "playing") {
+            sendWS({ type: "playback:pause" });
+          } else {
+            sendWS({ type: "playback:play" });
+          }
+        };
+
+        document.getElementById("btn-skip").onclick = () => {
+          sendWS({ type: "playback:skip" });
+        };
+
+        document.getElementById("progress-bar-container").onclick = (e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const ratio = (e.clientX - rect.left) / rect.width;
+          const duration = getActiveDuration();
+          if (duration > 0) {
+            sendWS({ type: "playback:seek", time: ratio * duration });
+          }
+        };
+
+        const slider = document.getElementById("crossfade-slider");
+        const valueEl = document.getElementById("crossfade-value");
+        slider.oninput = () => {
+          valueEl.textContent = parseFloat(slider.value) + "s";
+        };
+        slider.onchange = () => {
+          const val = parseFloat(slider.value);
+          state.crossfadeDuration = val;
+          sendWS({ type: "crossfade:set", duration: val });
+        };
+      }
+
+      function updateSkipVotes(current, needed) {
+        skipVoteState = { current, needed };
+        const badge = document.getElementById("skip-badge");
+        if (badge) badge.textContent = `${current}/${needed}`;
+      }
+
+      // ─── Queue renderer ──────────────────────────────────────────────────────────
+      function renderQueue(queue, currentIndex) {
+        const list = document.getElementById("queue-list");
+        if (!list) return;
+
+        if (!queue || queue.length === 0) {
+          list.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-dim); font-size:13px;">Queue is empty</div>`;
+          return;
+        }
+
+        list.innerHTML = queue
+          .map((track, i) => {
+            const isCurrent = i === currentIndex;
+            return `
+      <div class="queue-item ${isCurrent ? "is-current" : ""}" data-track-id="${escHtml(track.id)}">
+        <span class="queue-index">${
+          isCurrent ? `<span class="now-playing-indicator">▶</span>` : i + 1
+        }</span>
+        <img class="queue-thumb" src="${escHtml(track.thumbnail)}" alt=""
+             onerror="this.style.display='none'" />
+        <div class="queue-info">
+          <div class="queue-title" title="${escHtml(track.title)}">${escHtml(track.title)}</div>
+          <div class="queue-by">by ${escHtml(track.addedByName)}</div>
+        </div>
+        <button class="queue-remove" data-track-id="${escHtml(track.id)}" title="Remove">✕</button>
+      </div>`;
+          })
+          .join("");
+
+        list.querySelectorAll(".queue-remove").forEach((btn) => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            sendWS({ type: "queue:remove", trackId: btn.dataset.trackId });
+          };
+        });
+      }
+
+      // ─── People list ─────────────────────────────────────────────────────────────
+      function renderPeopleList(users) {
+        const list = document.getElementById("people-list");
+        if (!list) return;
+
+        list.innerHTML = users
+          .map(
+            (u) => `
+    <div class="person-item">
+      <div class="person-avatar" style="background:${escHtml(u.color)}">
+        ${escHtml(u.name.charAt(0).toUpperCase())}
+      </div>
+      <span class="person-name">${escHtml(u.name)}
+        ${u.id === state.userId ? '<span style="color:var(--text-dim);font-size:12px"> (you)</span>' : ""}
+      </span>
+      ${
+        u.id === state.roomState?.hostId
+          ? '<span class="host-badge">Host</span>'
+          : ""
+      }
+    </div>`,
+          )
+          .join("");
+      }
+
+      // ─── Chat ─────────────────────────────────────────────────────────────────────
+      function addChatMessage(msg) {
+        const container = document.getElementById("chat-messages");
+        if (!container) return;
+
+        const time = new Date(msg.timestamp);
+        const hh = String(time.getHours()).padStart(2, "0");
+        const mm = String(time.getMinutes()).padStart(2, "0");
+
+        const user = (state.roomState?.users || []).find(
+          (u) => u.id === msg.userId,
+        );
+        const color = user ? user.color : "var(--accent)";
+
+        const el = document.createElement("div");
+        el.className = "chat-msg";
+        el.innerHTML = `
+    <div class="chat-msg-header">
+      <span class="chat-msg-name" style="color:${escHtml(color)}">${escHtml(msg.userName)}</span>
+      <span class="chat-msg-time">${hh}:${mm}</span>
+    </div>
+    <div class="chat-msg-text">${escHtml(msg.text)}</div>`;
+
+        container.appendChild(el);
+        container.scrollTop = container.scrollHeight;
+      }
+
+      function addSystemMessage(text) {
+        const container = document.getElementById("chat-messages");
+        if (!container) return;
+
+        const el = document.createElement("div");
+        el.className = "chat-msg system";
+        el.innerHTML = `<div class="chat-msg-text">${escHtml(text)}</div>`;
+        container.appendChild(el);
+        container.scrollTop = container.scrollHeight;
+      }
+
+      // ─── Equalizer bars ───────────────────────────────────────────────────────────
+      function updateEqBars(isPlaying) {
+        const bars = document.getElementById("eq-bars");
+        if (!bars) return;
+        if (isPlaying) bars.classList.add("playing");
+        else bars.classList.remove("playing");
+      }
+
+      // ─── Progress bar updater ─────────────────────────────────────────────────────
+      let progressInterval = null;
+
+      function startProgressUpdater() {
+        if (progressInterval) clearInterval(progressInterval);
+        progressInterval = setInterval(() => {
+          const fill = document.getElementById("progress-bar-fill");
+          const curEl = document.getElementById("progress-current");
+          const durEl = document.getElementById("progress-duration");
+          if (!fill) return;
+
+          const player = getActivePlayer();
+          if (!player) return;
+
+          let current = 0;
+          let duration = 0;
+          try {
+            current = player.getCurrentTime() || 0;
+            duration = player.getDuration() || 0;
+          } catch {
+            return;
+          }
+
+          if (duration > 0) {
+            fill.style.width = ((current / duration) * 100).toFixed(2) + "%";
+          }
+          if (curEl) curEl.textContent = formatTime(current);
+          if (durEl) durEl.textContent = formatTime(duration);
+        }, 500);
+      }
+
+      function stopProgressUpdater() {
+        if (progressInterval) {
+          clearInterval(progressInterval);
+          progressInterval = null;
+        }
+      }
+
+      // ─── Playback sync ────────────────────────────────────────────────────────────
+      function handlePlaybackSync(msg) {
+        if (state.roomState) {
+          state.roomState.playbackState = msg.state;
+          state.roomState.currentIndex = msg.currentIndex;
+          state.roomState.elapsed = msg.elapsed;
+        }
+
+        // Update play/pause button
+        const ppBtn = document.getElementById("btn-play-pause");
+        if (ppBtn) {
+          ppBtn.textContent = msg.state === "playing" ? "⏸" : "▶";
+          ppBtn.title = msg.state === "playing" ? "Pause" : "Play";
+        }
+
+        updateEqBars(msg.state === "playing");
+
+        waitForYTReady(() => {
+          if (msg.currentIndex < 0) {
+            // Nothing playing
+            try {
+              getActivePlayer().stopVideo();
+            } catch {}
+            stopProgressUpdater();
+            stopCrossfadePoller();
+            return;
+          }
+
+          const queue = state.roomState?.queue || [];
+          const track = queue[msg.currentIndex];
+          if (!track) return;
+
+          const now = Date.now();
+          // Expected position accounting for network round-trip
+          const expectedElapsed =
+            msg.state === "playing"
+              ? msg.elapsed + (now - msg.timestamp) / 1000
+              : msg.elapsed;
+
+          const player = getActivePlayer();
+          let currentId = null;
+          try {
+            currentId = getActiveYouTubeId();
+          } catch {}
+
+          if (currentId !== track.youtubeId) {
+            // Different track — load it
+            cancelCrossfade();
+            loadTrackOnPlayer(
+              activePIdx,
+              track.youtubeId,
+              expectedElapsed,
+              msg.state === "playing",
+            );
+          } else {
+            // Same track — sync position
+            let currentTime = 0;
+            try {
+              currentTime = player.getCurrentTime() || 0;
+            } catch {}
+
+            const drift = Math.abs(currentTime - expectedElapsed);
+            if (drift > 2.5) {
+              try {
+                player.seekTo(expectedElapsed, true);
+              } catch {}
+            }
+
+            if (msg.state === "playing") {
+              try {
+                player.playVideo();
+              } catch {}
+              startProgressUpdater();
+              startCrossfadePoller();
+            } else {
+              try {
+                player.pauseVideo();
+              } catch {}
+              stopProgressUpdater();
+              stopCrossfadePoller();
+            }
+          }
+        });
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════════
+      //  YOUTUBE IFRAME API + CROSSFADE ENGINE
+      // ═══════════════════════════════════════════════════════════════════════════
+
+      let ytReady = false;
+      const ytReadyCallbacks = [];
+      let playerA = null;
+      let playerB = null;
+
+      // activePIdx: 0 = player A is active, 1 = player B is active
+      let activePIdx = 0;
+
+      // Track IDs loaded in each player slot
+      let loadedYtIds = [null, null];
+
+      // Crossfade engine state
+      let crossfadePollerTimer = null;
+      let crossfadeIntervalTimer = null;
+      let crossfadeInProgress = false;
+      let crossfadeNotifiedServer = false;
+
+      /**
+       * Called by the YouTube IFrame API when the library is ready.
+       */
+      window.onYouTubeIframeAPIReady = function () {
+        playerA = new YT.Player("yt-player-a", {
+          height: "1",
+          width: "1",
+          videoId: "",
+          playerVars: { autoplay: 0, controls: 0, rel: 0, iv_load_policy: 3 },
+          events: {
+            onReady: () => checkBothPlayersReady(),
+            onStateChange: (e) => onPlayerStateChange(0, e),
+          },
+        });
+
+        playerB = new YT.Player("yt-player-b", {
+          height: "1",
+          width: "1",
+          videoId: "",
+          playerVars: { autoplay: 0, controls: 0, rel: 0, iv_load_policy: 3 },
+          events: {
+            onReady: () => checkBothPlayersReady(),
+            onStateChange: (e) => onPlayerStateChange(1, e),
+          },
+        });
+      };
+
+      let playersReadyCount = 0;
+      function checkBothPlayersReady() {
+        playersReadyCount++;
+        if (playersReadyCount >= 2) {
+          ytReady = true;
+          ytReadyCallbacks.forEach((fn) => fn());
+          ytReadyCallbacks.length = 0;
+        }
+      }
+
+      function waitForYTReady(fn) {
+        if (ytReady) fn();
+        else ytReadyCallbacks.push(fn);
+      }
+
+      function getActivePlayer() {
+        return activePIdx === 0 ? playerA : playerB;
+      }
+
+      function getOnDeckPlayer() {
+        return activePIdx === 0 ? playerB : playerA;
+      }
+
+      function getActiveYouTubeId() {
+        return loadedYtIds[activePIdx];
+      }
+
+      function getActiveDuration() {
+        try {
+          return getActivePlayer().getDuration() || 0;
+        } catch {
+          return 0;
+        }
+      }
+
+      /**
+       * Load a YouTube video onto a specific player slot.
+       *
+       * @param {number} pIdx - 0 (player A) or 1 (player B)
+       * @param {string} youtubeId
+       * @param {number} startSeconds
+       * @param {boolean} autoplay
+       */
+      function loadTrackOnPlayer(pIdx, youtubeId, startSeconds, autoplay) {
+        const player = pIdx === 0 ? playerA : playerB;
+        if (!player) return;
+
+        loadedYtIds[pIdx] = youtubeId;
+
+        try {
+          player.loadVideoById({
+            videoId: youtubeId,
+            startSeconds: startSeconds || 0,
+          });
+          player.setVolume(pIdx === activePIdx ? 100 : 0);
+        } catch {
+          return;
+        }
+
+        if (!autoplay) {
+          // loadVideoById auto-plays; pause shortly after
+          setTimeout(() => {
+            const currentId = loadedYtIds[pIdx];
+            if (currentId === youtubeId) {
+              try {
+                player.pauseVideo();
+              } catch {}
+            }
+          }, 600);
+        } else {
+          startProgressUpdater();
+          startCrossfadePoller();
+        }
+      }
+
+      // ─── Player state change handler ─────────────────────────────────────────────
+      function onPlayerStateChange(pIdx, e) {
+        // YT.PlayerState.ENDED = 0
+        if (e.data === 0) {
+          // Only the active player ending matters (if not mid-crossfade)
+          if (pIdx === activePIdx && !crossfadeInProgress) {
+            sendWS({ type: "playback:skip" });
+          }
+          // If it's the on-deck player somehow ending (very short track), ignore
+        }
+
+        // When active player starts playing, ensure progress & crossfade polling
+        if (pIdx === activePIdx && e.data === 1) {
+          startProgressUpdater();
+          startCrossfadePoller();
+        }
+      }
+
+      // ─── Crossfade poller ─────────────────────────────────────────────────────────
+      /**
+       * Polls the active player's currentTime every 250ms and kicks off
+       * a crossfade when within `crossfadeDuration` seconds of the end.
+       */
+      function startCrossfadePoller() {
+        stopCrossfadePoller();
+        crossfadePollerTimer = setInterval(pollCrossfade, 250);
+      }
+
+      function stopCrossfadePoller() {
+        if (crossfadePollerTimer) {
+          clearInterval(crossfadePollerTimer);
+          crossfadePollerTimer = null;
+        }
+      }
+
+      function pollCrossfade() {
+        if (crossfadeInProgress) return;
+
+        const queue = state.roomState?.queue || [];
+        const currentIndex = state.roomState?.currentIndex ?? -1;
+        if (currentIndex < 0) return;
+
+        const nextIndex = currentIndex + 1;
+        if (nextIndex >= queue.length) return; // No next track — natural end
+
+        const player = getActivePlayer();
+        let currentTime = 0,
+          duration = 0;
+        try {
+          currentTime = player.getCurrentTime() || 0;
+          duration = player.getDuration() || 0;
+        } catch {
+          return;
+        }
+
+        if (duration <= 0) return;
+
+        const remaining = duration - currentTime;
+        const crossfade = state.crossfadeDuration;
+
+        // Clamp crossfade to remaining track time
+        const effectiveCrossfade = Math.min(
+          crossfade,
+          Math.max(0, remaining - 0.1),
+        );
+
+        if (effectiveCrossfade <= 0) return;
+
+        if (remaining <= effectiveCrossfade) {
+          // Kick off the crossfade!
+          const nextTrack = queue[nextIndex];
+          startCrossfade(nextTrack.youtubeId, effectiveCrossfade);
+        }
+      }
+
+      /**
+       * Begin the crossfade sequence.
+       *
+       * @param {string} nextYoutubeId
+       * @param {number} fadeDuration - seconds
+       */
+      function startCrossfade(nextYoutubeId, fadeDuration) {
+        if (crossfadeInProgress) return;
+        crossfadeInProgress = true;
+        crossfadeNotifiedServer = false;
+
+        const onDeckIdx = activePIdx === 0 ? 1 : 0;
+        const onDeckPlayer = getOnDeckPlayer();
+
+        // Load next track on on-deck player at volume 0
+        loadedYtIds[onDeckIdx] = nextYoutubeId;
+        try {
+          onDeckPlayer.loadVideoById({
+            videoId: nextYoutubeId,
+            startSeconds: 0,
+          });
+          onDeckPlayer.setVolume(0);
+          // It will auto-play
+        } catch {
+          crossfadeInProgress = false;
+          return;
+        }
+
+        const startTime = Date.now();
+        const durationMs = fadeDuration * 1000;
+
+        crossfadeIntervalTimer = setInterval(() => {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / durationMs, 1);
+
+          const outgoingVol = Math.round(100 * (1 - progress));
+          const incomingVol = Math.round(100 * progress);
+
+          try {
+            getActivePlayer().setVolume(outgoingVol);
+          } catch {}
+          try {
+            onDeckPlayer.setVolume(incomingVol);
+          } catch {}
+
+          if (progress >= 1) {
+            // Crossfade complete
+            clearInterval(crossfadeIntervalTimer);
+            crossfadeIntervalTimer = null;
+
+            try {
+              getActivePlayer().stopVideo();
+            } catch {}
+
+            // Swap roles
+            activePIdx = onDeckIdx;
+
+            // Notify server to advance track
+            if (!crossfadeNotifiedServer) {
+              crossfadeNotifiedServer = true;
+              sendWS({ type: "playback:skip" });
+            }
+
+            crossfadeInProgress = false;
+          }
+        }, 50);
+      }
+
+      /**
+       * Cancel any in-progress crossfade. Snaps incoming to full volume.
+       */
+      function cancelCrossfade() {
+        if (crossfadeIntervalTimer) {
+          clearInterval(crossfadeIntervalTimer);
+          crossfadeIntervalTimer = null;
+        }
+
+        if (crossfadeInProgress) {
+          crossfadeInProgress = false;
+          // Snap incoming (currently on-deck, about to become active) to full volume
+          // But if we're cancelling due to a server-driven track change, just reset volumes
+          try {
+            getActivePlayer().setVolume(100);
+          } catch {}
+          try {
+            getOnDeckPlayer().setVolume(0);
+          } catch {}
+          try {
+            getOnDeckPlayer().stopVideo();
+          } catch {}
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════════
+      //  UI LOGIC
+      // ═══════════════════════════════════════════════════════════════════════════
+
+      // ─── Screen switching ─────────────────────────────────────────────────────────
+      function showHomeScreen() {
+        document.getElementById("screen-home").classList.remove("hidden");
+        document.getElementById("screen-room").classList.add("hidden");
+      }
+
+      function showRoomScreen() {
+        document.getElementById("screen-home").classList.add("hidden");
+        document.getElementById("screen-room").classList.remove("hidden");
+      }
+
+      function showHomeError(msg, el = "create-error") {
+        const e = document.getElementById(el);
+        if (e) e.textContent = msg || "";
+      }
+
+      // ─── Home screen buttons ──────────────────────────────────────────────────────
+      document.getElementById("btn-create").onclick = async () => {
+        const name = document.getElementById("input-username").value.trim();
+        const roomName = document.getElementById("input-roomname").value.trim();
+        const errEl = document.getElementById("create-error");
+        errEl.textContent = "";
+
+        if (!name) {
+          errEl.textContent = "Please enter your name.";
+          return;
+        }
+
+        try {
+          const res = await fetch("/api/rooms", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: roomName || undefined }),
+          });
+          if (!res.ok) throw new Error("Failed to create room");
+          const data = await res.json();
+          joinRoomWithId(data.id, name);
+        } catch (e) {
+          errEl.textContent = "Could not create room. Try again.";
+        }
+      };
+
+      document.getElementById("btn-join").onclick = () => {
+        const name = document.getElementById("input-username").value.trim();
+        const invite = document.getElementById("input-invite").value.trim();
+        const errEl = document.getElementById("join-error");
+        errEl.textContent = "";
+
+        if (!name) {
+          errEl.textContent = "Please enter your name.";
+          return;
+        }
+        if (!invite) {
+          errEl.textContent = "Please enter an invite link or room ID.";
+          return;
+        }
+
+        const roomId = extractRoomIdFromInput(invite);
+        if (!roomId) {
+          errEl.textContent = "Invalid invite link or room ID.";
+          return;
+        }
+
+        joinRoomWithId(roomId, name);
+      };
+
+      function extractRoomIdFromInput(input) {
+        // Might be a full URL like https://host/room/ROOMID
+        // or just a room ID (nanoid 8 chars)
+        try {
+          const url = new URL(input);
+          const match = url.pathname.match(/\/room\/([A-Za-z0-9_-]+)/);
+          if (match) return match[1];
+          // Also try just the pathname in case they pasted /room/ROOMID
+          const idMatch = url.pathname.match(/([A-Za-z0-9_-]{8})$/);
+          if (idMatch) return idMatch[1];
+        } catch {
+          // Not a valid URL — treat as raw room ID
+        }
+        // Raw ID or last segment
+        const clean = input.replace(/\/$/, "");
+        const parts = clean.split(/[/?#]/);
+        return parts[parts.length - 1] || null;
+      }
+
+      function joinRoomWithId(roomId, userName) {
+        state.roomId = roomId;
+        history.pushState({}, "", `/room/${roomId}`);
+
+        connectWS(roomId, userName);
+      }
+
+      // ─── Sidebar tabs ─────────────────────────────────────────────────────────────
+      document.getElementById("tab-chat").onclick = () => switchTab("chat");
+      document.getElementById("tab-people").onclick = () => switchTab("people");
+
+      function switchTab(tab) {
+        document
+          .getElementById("tab-chat")
+          .classList.toggle("active", tab === "chat");
+        document
+          .getElementById("tab-people")
+          .classList.toggle("active", tab === "people");
+        document
+          .getElementById("panel-chat")
+          .classList.toggle("hidden", tab !== "chat");
+        document
+          .getElementById("panel-people")
+          .classList.toggle("hidden", tab !== "people");
+      }
+
+      // ─── Sidebar mobile toggle ────────────────────────────────────────────────────
+      document.getElementById("btn-sidebar-toggle").onclick = () => {
+        document.getElementById("room-sidebar").classList.add("open");
+      };
+      document.getElementById("btn-sidebar-close").onclick = () => {
+        document.getElementById("room-sidebar").classList.remove("open");
+      };
+
+      // ─── Chat send ────────────────────────────────────────────────────────────────
+      document.getElementById("btn-chat-send").onclick = sendChatMessage;
+      document.getElementById("input-chat").onkeydown = (e) => {
+        if (e.key === "Enter") sendChatMessage();
+      };
+
+      function sendChatMessage() {
+        const input = document.getElementById("input-chat");
+        const text = input.value.trim();
+        if (!text) return;
+        sendWS({ type: "chat:message", text });
+        input.value = "";
+      }
+
+      // ─── Add track ────────────────────────────────────────────────────────────────
+      document.getElementById("btn-add-track").onclick = addTrack;
+      document.getElementById("input-track-url").onkeydown = (e) => {
+        if (e.key === "Enter") addTrack();
+      };
+
+      function addTrack() {
+        const input = document.getElementById("input-track-url");
+        const url = input.value.trim();
+        if (!url) return;
+        sendWS({ type: "queue:add", url });
+        input.value = "";
+      }
+
+      // ─── Invite modal ─────────────────────────────────────────────────────────────
+      document.getElementById("btn-invite-modal").onclick = () => {
+        const url = `${location.origin}/room/${state.roomId}`;
+        document.getElementById("invite-url-display").value = url;
+        document.getElementById("modal-invite").classList.remove("hidden");
+      };
+
+      document.getElementById("modal-invite-close").onclick = () => {
+        document.getElementById("modal-invite").classList.add("hidden");
+      };
+
+      document.getElementById("modal-invite").onclick = (e) => {
+        if (e.target === document.getElementById("modal-invite")) {
+          document.getElementById("modal-invite").classList.add("hidden");
+        }
+      };
+
+      document.getElementById("btn-copy-invite").onclick = () => {
+        const val = document.getElementById("invite-url-display").value;
+        navigator.clipboard
+          .writeText(val)
+          .then(() => showToast("Invite link copied!"));
+      };
+
+      // ─── Toast ────────────────────────────────────────────────────────────────────
+      let toastTimer = null;
+
+      function showToast(msg) {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.classList.remove("hidden", "hide");
+        el.classList.add("show");
+
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          el.classList.remove("show");
+          el.classList.add("hide");
+          setTimeout(() => el.classList.add("hidden"), 250);
+        }, 2500);
+      }
+
+      // ─── Utilities ────────────────────────────────────────────────────────────────
+      function escHtml(str) {
+        if (!str) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function formatTime(seconds) {
+        if (!seconds || isNaN(seconds)) return "0:00";
+        const s = Math.floor(seconds);
+        const m = Math.floor(s / 60);
+        const ss = s % 60;
+        return `${m}:${String(ss).padStart(2, "0")}`;
+      }
+
+      // ─── URL routing on page load ─────────────────────────────────────────────────
+      (function checkRoute() {
+        const match = location.pathname.match(/\/room\/([A-Za-z0-9_-]+)/);
+        if (match) {
+          const roomId = match[1];
+          // Pre-fill the invite field
+          document.getElementById("input-invite").value = roomId;
+          // Verify room exists
+          fetch(`/api/rooms/${roomId}`)
+            .then((r) => {
+              if (!r.ok) {
+                // Room gone — redirect to home
+                history.replaceState({}, "", "/");
+                showToast("Room not found");
+              }
+            })
+            .catch(() => {});
+        }
+      })();
+    </script>
+  </body>
+</html>

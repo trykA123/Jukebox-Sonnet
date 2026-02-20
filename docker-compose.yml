@@ -1,0 +1,25 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Add this `jukebox` service block to your existing docker-compose.yml
+#  under the `services:` key.
+#
+#  Example of your existing compose:
+#
+#    services:
+#      some-other-app:
+#        ...
+#      jukebox:          ← add from here
+#        ...             ← to here
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  jukebox:
+    build:
+      context: . # path to the cloned jukebox repo on your server
+      dockerfile: Dockerfile
+    image: jukebox:latest
+    container_name: jukebox
+    restart: unless-stopped
+    ports:
+      - "15230:15230"
+    environment:
+      PORT: 15230
